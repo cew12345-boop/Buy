@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>小小綠色店長：午餐大作戰</title>
+  <!-- 載入 Tailwind CSS 用於現代化佈局 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 載入 Lucide 圖標庫 -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* 載入童趣風格與繁體中文標準字體 */
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Noto+Sans+TC:wght@400;700;900&display=swap');
+    
+    body {
+      font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+      background-color: #f5eedc; /* 溫馨溫柔的牛皮紙底色 */
+      background-image: radial-gradient(#e5dbbe 1.5px, transparent 1.5px);
+      background-size: 24px 24px;
+      user-select: none;
+    }
+
+    /* Paper Cutout (剪紙) 立體風格核心樣式 */
+    .paper-card {
+      background-color: #ffffff;
+      border: 3.5px solid #4a2e1b; /* 手工感深褐粗邊框 */
+      border-radius: 20px;
+      box-shadow: 6px 6px 0px 0px #4a2e1b; /* 扁平偏硬的立體陰影 */
+      transition: all 0.2s ease-in-out;
+      position: relative;
+    }
+
+    /* 按鈕手感回饋 */
+    .paper-btn {
+      border: 3px solid #4a2e1b;
+      box-shadow: 4px 4px 0px 0px #4a2e1b;
+      transition: all 0.1s ease-in-out;
+    }
+    .paper-btn:active {
+      transform: translate(3px, 3px);
+      box-shadow: 1px 1px 0px 0px #4a2e1b;
+    }
+
+    /* 剪紙標籤特殊陰影 */
+    .paper-tag {
+      border: 2px solid #4a2e1b;
+      box-shadow: 3px 3px 0px 0px #4a2e1b;
+    }
+
+    /* 立體緞帶裝飾 */
+    .ribbon {
+      background-color: #ffb84d;
+      border: 3px solid #4a2e1b;
+      box-shadow: 0px 4px 0px 0px #4a2e1b;
+      transform: rotate(-1.5deg);
+    }
+
+    /* 紙花邊裁剪效果 */
+    .paper-wave {
+      background-image: radial-gradient(circle at 10px -5px, transparent 12px, #fff 13px);
+      background-size: 20px 20px;
+    }
+
+    /* 微微搖擺動態，增加童趣手工感 */
+    @keyframes gentle-wiggle {
+      0%, 100% { transform: rotate(-0.5deg); }
+      50% { transform: rotate(0.5deg); }
+    }
+    .animate-wiggle {
+      animation: gentle-wiggle 3s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-start p-3 md:p-6 overflow-x-hidden text-amber-950">
+
+  <!-- 音效提示區（頂部微調） -->
+  <div class="fixed top-4 right-4 z-50 flex items-center gap-2">
+    <button onclick="toggleMute()" id="muteBtn" class="paper-btn bg-amber-100 hover:bg-amber-200 text-amber-950 p-2.5 rounded-full flex items-center justify-center">
+      <i data-lucide="volume-2" class="w-5 h-5"></i>
+    </button>
+  </div>
+
+  <!-- 遊戲主容器：仿立體紙盒背板 -->
+  <main class="w-full max-w-4xl min-h-[85vh] flex flex-col justify-between my-auto relative p-4 md:p-8 rounded-3xl border-4 border-dashed border-[#8d7156] bg-[#fdfaf2] shadow-inner">
+    
+    <!-- ==================== 頂部資訊列（除首頁外顯示） ==================== -->
+    <header id="gameHeader" class="hidden w-full flex flex-wrap justify-between items-center gap-4 mb-6 pb-4 border-b-2 border-dashed border-amber-800/20">
+      <!-- 店名與回合 -->
+      <div class="flex items-center gap-3">
+        <span class="ribbon px-4 py-1.5 rounded-lg text-sm md:text-base font-extrabold text-amber-950">
+          🏡 小小綠色便當店
+        </span>
+        <span id="currentPhaseLabel" class="text-xs md:text-sm font-bold bg-amber-200/60 text-amber-900 px-3 py-1 rounded-full craft-border">
+          進行中：1. 進貨採購
+        </span>
+      </div>
+
+      <!-- 經營狀態板 -->
+      <div class="flex gap-4 items-center">
+        <!-- 資金 -->
+        <div class="paper-card bg-amber-50 px-3 py-1.5 md:px-4 md:py-2 flex items-center gap-2">
+          <div class="bg-yellow-100 p-1 rounded-full border border-amber-950" id="moneyIcon"></div>
+          <div>
+            <div class="text-[10px] text-amber-800 font-bold leading-none">資金餘額</div>
+            <div class="text-sm md:text-lg font-black text-amber-950"><span id="hudMoney">1000</span> 元</div>
+          </div>
+        </div>
+
+        <!-- 地球健康值 -->
+        <div class="paper-card bg-emerald-50 px-3 py-1.5 md:px-4 md:py-2 flex items-center gap-2">
+          <div class="bg-emerald-100 p-1 rounded-full border border-emerald-950" id="earthIcon"></div>
+          <div>
+            <div class="text-[10px] text-emerald-800 font-bold leading-none">地球健康值</div>
+            <div class="text-sm md:text-lg font-black text-emerald-950"><span id="hudEarth">100</span> 分</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ==================== 畫面切換區 ==================== -->
+    <section id="screenArea" class="flex-grow flex flex-col justify-center w-full">
+      
+      <!-- 畫面 0：遊戲首頁 -->
+      <div id="screenIntro" class="flex flex-col items-center text-center py-6 animate-wiggle">
+        <div class="relative mb-6">
+          <div class="absolute -top-6 -left-8 transform -rotate-12 bg-emerald-400 text-emerald-950 border-2 border-amber-950 px-3 py-1 text-xs font-bold rounded-md paper-tag">
+            永續未來綠色教育
+          </div>
+          <h1 class="text-4xl md:text-6xl font-black tracking-wider text-emerald-800 mb-2 filter drop-shadow-[2px_2px_0px_#4a2e1b]">
+            小小綠色店長
+          </h1>
+          <h2 class="text-2xl md:text-3xl font-extrabold text-amber-900 tracking-wide">
+            🍱 午餐大作戰 🍱
+          </h2>
+        </div>
+
+        <p class="text-base md:text-lg text-amber-800/90 max-w-lg mb-8 leading-relaxed font-semibold">
+          嗨！小老闆！歡迎加入！今天起你要親自管理一家環保便當店。你有 <span class="text-yellow-600 font-black">1000 元</span> 創業資金和滿分 <span class="text-emerald-600 font-black">100 分的地球健康值</span>。
+          你能兼顧利潤，同時為地球媽媽做出最棒的綠色減碳決定嗎？
+        </p>
+
+        <!-- 剪紙風精美角色插圖 -->
+        <div class="relative w-64 h-48 mb-8 flex items-center justify-center">
+          <div class="absolute inset-0 bg-amber-100 rounded-full border-4 border-dashed border-amber-400 opacity-60"></div>
+          <!-- 地球動態圖示 -->
+          <div id="introEarthSvg" class="z-10"></div>
+        </div>
+
+        <button onclick="startGame()" class="paper-btn bg-emerald-400 hover:bg-emerald-500 text-emerald-950 text-xl md:text-2xl font-black px-10 py-4 rounded-2xl cursor-pointer">
+          🏁 創立便當店，出發！
+        </button>
+      </div>
+
+      <!-- 畫面 1：進貨採購階段 -->
+      <div id="screenProcure" class="hidden flex flex-col">
+        <div class="text-center mb-6">
+          <h3 class="text-2xl md:text-3xl font-black text-amber-900 mb-2">📦 第一階段：進貨採購</h3>
+          <p class="text-sm md:text-base text-amber-800 font-semibold">資金有限，請根據「成本」與「環保考量」慎重選擇採購的便當食材組合：</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <!-- 方案 A -->
+          <div class="paper-card p-5 flex flex-col justify-between bg-rose-50/50 border-rose-950 hover:scale-[1.02] duration-200">
+            <div>
+              <span class="bg-rose-200 text-rose-900 border-2 border-rose-950 px-2 py-0.5 rounded-full text-xs font-black paper-tag">
+                利潤導向 💰
+              </span>
+              <h4 class="text-xl font-extrabold text-rose-950 mt-3 mb-2">方案 A：進口便宜全餐</h4>
+              <p class="text-xs md:text-sm text-amber-900/80 mb-4 leading-relaxed">
+                進口冷凍食材，加上豪華多層塑膠盒、塑膠膜包裝。特點是便宜，但會製造超多塑膠垃圾！
+              </p>
+            </div>
+            <div>
+              <div class="border-t border-dashed border-amber-900/20 py-3 my-2 text-xs md:text-sm font-bold space-y-1">
+                <div class="flex justify-between"><span>進貨成本:</span> <span class="text-rose-600 font-extrabold">200 元</span></div>
+                <div class="flex justify-between"><span>地球影響:</span> <span class="text-rose-600 font-extrabold">-30 分</span></div>
+                <div class="flex justify-between"><span>包裝特徵:</span> <span class="text-slate-600">一次性多層包裝</span></div>
+              </div>
+              <button onclick="selectProcure('A')" class="paper-btn w-full bg-rose-300 hover:bg-rose-400 text-rose-950 font-black py-2.5 rounded-xl text-sm">
+                購買此方案
+              </button>
+            </div>
+          </div>
+
+          <!-- 方案 B -->
+          <div class="paper-card p-5 flex flex-col justify-between bg-amber-50/50 border-amber-950 hover:scale-[1.02] duration-200">
+            <div>
+              <span class="bg-amber-200 text-amber-900 border-2 border-amber-950 px-2 py-0.5 rounded-full text-xs font-black paper-tag">
+                平衡導向 ⚖️
+              </span>
+              <h4 class="text-xl font-extrabold text-amber-950 mt-3 mb-2">方案 B：超市紙盒套餐</h4>
+              <p class="text-xs md:text-sm text-amber-900/80 mb-4 leading-relaxed">
+                選購一般超市的大眾食材，搭配標準再生紙盒與簡單防油紙包裝。利潤與環保表現都十分適中。
+              </p>
+            </div>
+            <div>
+              <div class="border-t border-dashed border-amber-900/20 py-3 my-2 text-xs md:text-sm font-bold space-y-1">
+                <div class="flex justify-between"><span>進貨成本:</span> <span class="text-amber-600 font-extrabold">500 元</span></div>
+                <div class="flex justify-between"><span>地球影響:</span> <span class="text-rose-600 font-extrabold">-10 分</span></div>
+                <div class="flex justify-between"><span>包裝特徵:</span> <span class="text-slate-600">再生紙盒包裝</span></div>
+              </div>
+              <button onclick="selectProcure('B')" class="paper-btn w-full bg-amber-300 hover:bg-amber-400 text-amber-950 font-black py-2.5 rounded-xl text-sm">
+                購買此方案
+              </button>
+            </div>
+          </div>
+
+          <!-- 方案 C -->
+          <div class="paper-card p-5 flex flex-col justify-between bg-emerald-50/50 border-emerald-950 hover:scale-[1.02] duration-200 relative overflow-hidden">
+            <!-- 3R3E 符合標章裝飾 -->
+            <div class="absolute top-4 right-[-32px] rotate-45 bg-emerald-500 text-white border-y border-emerald-950 text-[10px] font-black py-1 px-10 text-center uppercase tracking-wider">
+              3R3E
+            </div>
+            <div>
+              <span class="bg-emerald-200 text-emerald-900 border-2 border-emerald-950 px-2 py-0.5 rounded-full text-xs font-black paper-tag flex items-center w-fit gap-1">
+                綠色消費 🌱
+              </span>
+              <h4 class="text-xl font-extrabold text-emerald-950 mt-3 mb-2 flex items-center gap-1.5">
+                方案 C：在地小農裸賣
+              </h4>
+              <p class="text-xs md:text-sm text-amber-900/80 mb-4 leading-relaxed">
+                採購在地有機無毒蔬菜，鼓勵顧客自備餐盒。具環保標章，符合 3R3E 原則！
+                <button onclick="openModal('3r3eModal')" class="inline-block text-emerald-700 underline hover:text-emerald-900 ml-1 font-bold">什麼是 3R3E？</button>
+              </p>
+            </div>
+            <div>
+              <div class="border-t border-dashed border-amber-900/20 py-3 my-2 text-xs md:text-sm font-bold space-y-1">
+                <div class="flex justify-between"><span>進貨成本:</span> <span class="text-emerald-600 font-extrabold">800 元</span></div>
+                <div class="flex justify-between"><span>地球影響:</span> <span class="text-emerald-600 font-extrabold">+20 分</span></div>
+                <div class="flex justify-between"><span>包裝特徵:</span> <span class="text-emerald-700">裸包裝/無塑膠包材</span></div>
+              </div>
+              <button onclick="selectProcure('C')" class="paper-btn w-full bg-emerald-300 hover:bg-emerald-400 text-emerald-950 font-black py-2.5 rounded-xl text-sm">
+                購買此方案
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 畫面 2：主打特色鑽石選單階段 -->
+      <div id="screenValues" class="hidden flex flex-col">
+        <div class="text-center mb-5">
+          <h3 class="text-2xl md:text-3xl font-black text-amber-900 mb-1">🏷️ 第二階段：選定菜單主打特色</h3>
+          <p class="text-sm md:text-base text-amber-800 font-semibold">
+            請點擊挑選 <span class="text-rose-600 font-black">3 個標籤</span>，這將決定本店的「主打價值觀」，吸引不同類型的顧客上門！
+          </p>
+          <!-- 選擇進度 -->
+          <div class="inline-block mt-3 bg-amber-100 border-2 border-amber-950 px-4 py-1 rounded-full text-xs md:text-sm font-black">
+            已選特色：<span id="selectedCount" class="text-rose-600">0</span> / 3 個
+          </div>
+        </div>
+
+        <!-- 9 個鑽石排列標籤 -->
+        <div class="flex flex-wrap justify-center gap-4 max-w-2xl mx-auto mb-6">
+          <button onclick="toggleValue('健康')" id="val-健康" class="paper-btn bg-white hover:bg-amber-100 text-amber-950 font-extrabold px-5 py-3 rounded-2xl text-base cursor-pointer">
+            🍏 健康
+          </button>
+          <button onclick="toggleValue('環保')" id="val-環保" class="paper-btn bg-white hover:bg-amber-100 text-amber-950 font-extrabold px-5 py-3 rounded-2xl text-base cursor-pointer">
+            🌳 環保
+          </button>
+          <button onclick="toggleValue('營養')" id="val-營養" class="paper-btn bg-white hover:bg-amber-100 text-amber-950 font-extrabold px-5 py-3 rounded-2xl text-base cursor-pointer">
+            🥦 營養
+          </button>
+          <button onclick="toggleValue('價格便宜')" id="val-價格便宜" class="paper-btn bg-white hover:bg-amber-100 text-amber-950 font-extrabold px-5 py-3 rounded-2xl text-base cursor-pointer">
+            🪙 價格便宜
+          </button>
+          <button onclick="toggleValue('新奇')" id="val-新奇" class="paper-btn bg-white hover:bg-amber-100 text-amber-950 font-extrabold px-5 py-3 rounded-2xl text-base cursor-pointer">
+            🎈 新奇
+          </button>
+          <button onclick="toggleValue('美觀')" id="val-美觀" class="paper-btn bg-white hover:bg-amber-100 text-amber-950 font-extrabold px-5 py-3 rounded-2xl text-base cursor-pointer">
+            ✨ 美觀
+          </button>
+          <button onclick="toggleValue('美味')" id="val-美味" class="paper-btn bg-white hover:bg-amber-100 text-amber-950 font-extrabold px-5 py-3 rounded-2xl text-base cursor-pointer">
+            😋 美味
+          </button>
+          <button onclick="toggleValue('飽足感')" id="val-飽足感" class="paper-btn bg-white hover:bg-amber-100 text-amber-950 font-extrabold px-5 py-3 rounded-2xl text-base cursor-pointer">
+            🍙 飽足感
+          </button>
+          <button onclick="toggleValue('愉悅度')" id="val-愉悅度" class="paper-btn bg-white hover:bg-amber-100 text-amber-950 font-extrabold px-5 py-3 rounded-2xl text-base cursor-pointer">
+            🎈 愉悅度
+          </button>
+        </div>
+
+        <div class="text-center">
+          <button id="confirmValuesBtn" onclick="confirmValues()" disabled class="paper-btn bg-slate-200 text-slate-400 font-black text-lg px-10 py-3 rounded-2xl cursor-not-allowed">
+            確定主打特色 ➔
+          </button>
+        </div>
+      </div>
+
+      <!-- 畫面 3：營業販售與突發事件階段 -->
+      <div id="screenSales" class="hidden flex flex-col md:flex-row gap-6">
+        
+        <!-- 左半部：排隊狀態與今日報表 -->
+        <div class="w-full md:w-2/5 flex flex-col gap-4">
+          <div class="paper-card p-4 bg-amber-50">
+            <h4 class="text-lg font-black text-amber-950 mb-3 flex items-center gap-2">
+              <i data-lucide="store" class="w-5 h-5 text-amber-800"></i>
+              今日便當店客流
+            </h4>
+            
+            <!-- 客人排隊視覺 -->
+            <div class="flex justify-around items-center py-4 bg-white rounded-xl border-2 border-dashed border-amber-950/20">
+              <div id="queueItem0" class="flex flex-col items-center opacity-40 transition-opacity">
+                <div class="w-12 h-12 rounded-full border-2 border-amber-950 bg-sky-200 flex items-center justify-center font-bold">1</div>
+                <span class="text-xs font-bold mt-1">學生小明</span>
+              </div>
+              <div id="queueItem1" class="flex flex-col items-center opacity-40 transition-opacity">
+                <div class="w-12 h-12 rounded-full border-2 border-amber-950 bg-emerald-200 flex items-center justify-center font-bold">2</div>
+                <span class="text-xs font-bold mt-1">上班族阿美</span>
+              </div>
+              <div id="queueItem2" class="flex flex-col items-center opacity-40 transition-opacity">
+                <div class="w-12 h-12 rounded-full border-2 border-amber-950 bg-amber-200 flex items-center justify-center font-bold">3</div>
+                <span class="text-xs font-bold mt-1">林媽媽</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="paper-card p-4 bg-white flex-grow">
+            <h4 class="text-base font-black text-amber-950 mb-2">📊 營運即時紀錄</h4>
+            <div id="salesLog" class="text-xs md:text-sm font-semibold text-amber-800/90 space-y-2 h-44 overflow-y-auto pr-1">
+              <!-- 動態紀錄 -->
+              <p>🌱 店鋪正式拉開鐵門，開始營業！</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右半部：顧客服務與突發事件交互核心 -->
+        <div class="w-full md:w-3/5">
+          <div class="paper-card p-6 min-h-[350px] flex flex-col justify-between bg-white overflow-hidden relative">
+            
+            <!-- 紙玩偶動態渲染 -->
+            <div id="customerServiceBox" class="flex flex-col h-full justify-between">
+              <!-- 此處動態加載顧客對話與互動 -->
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 畫面 4：結算與回顧階段 -->
+      <div id="screenEnding" class="hidden flex flex-col items-center">
+        <!-- 結算證書邊框效果 -->
+        <div class="paper-card p-6 md:p-10 w-full max-w-2xl bg-[#fffef5] border-double border-8 border-amber-950 relative overflow-hidden animate-wiggle">
+          
+          <!-- 環保印章裝飾 -->
+          <div id="endingBadge" class="absolute top-4 right-4 md:top-8 md:right-8 transform rotate-12 bg-transparent text-emerald-700 border-4 border-dashed border-emerald-700 rounded-full w-24 h-24 flex items-center justify-center font-black text-center text-sm md:text-base select-none">
+            永續綠色<br>認證印
+          </div>
+
+          <div class="text-center mb-6">
+            <span class="text-xs md:text-sm font-bold tracking-widest text-amber-800 bg-amber-200/50 px-3 py-1 rounded-full border border-amber-900/10">
+              小小綠色店長認證書
+            </span>
+            <h3 class="text-3xl md:text-4xl font-black text-amber-950 mt-3">📊 今日營運成果結算</h3>
+          </div>
+
+          <!-- 分數視覺面板 -->
+          <div class="grid grid-cols-2 gap-4 mb-6">
+            <!-- 資金結算 -->
+            <div class="bg-amber-100/60 p-4 rounded-2xl border-2 border-amber-950 flex flex-col items-center">
+              <span class="text-xs md:text-sm font-extrabold text-amber-800">最終營運資金</span>
+              <span class="text-2xl md:text-3xl font-black text-amber-950 mt-1"><span id="endMoney">0</span> 元</span>
+              <span class="text-[10px] text-amber-600 mt-1 font-semibold">包含店租雜支 -700 元</span>
+            </div>
+            <!-- 地球健康值 -->
+            <div class="bg-emerald-100/60 p-4 rounded-2xl border-2 border-emerald-950 flex flex-col items-center">
+              <span class="text-xs md:text-sm font-extrabold text-emerald-800">最終地球健康值</span>
+              <span class="text-2xl md:text-3xl font-black text-emerald-950 mt-1"><span id="endEarth">0</span> 分</span>
+              <span class="text-[10px] text-emerald-600 mt-1 font-semibold">滿分為 100 分</span>
+            </div>
+          </div>
+
+          <!-- 結局評價與教育反思 -->
+          <div class="bg-amber-50 p-5 rounded-2xl border-2 border-dashed border-amber-950 mb-6">
+            <h4 class="text-lg font-black text-amber-950 mb-2 flex items-center gap-2">
+              ⚖️ 便當店發展結局：<span id="endTitle" class="text-emerald-800">完美小老闆</span>
+            </h4>
+            <p id="endDescription" class="text-sm md:text-base text-amber-900/90 leading-relaxed font-bold">
+              這裏顯示結局內容與反思回饋...
+            </p>
+          </div>
+
+          <!-- 3R3E 小知識延伸教學 -->
+          <div class="bg-white p-4 rounded-xl border border-amber-950/20 text-xs text-amber-800 leading-relaxed font-semibold">
+            <h5 class="font-extrabold text-amber-950 mb-1 flex items-center gap-1">💡 綠色店長反思小記：</h5>
+            在便當店營運中，我們做的決定都代表著我們的態度！選擇低成本但過度包裝食材（選項 A）會產生包裝怪獸；而採用在地有機小農與自備餐具（選項 C）是實踐減廢(Reduce)、重複利用(Reuse)和循環再生(Recycle)的典範，這也體現了環境與經濟雙贏的 3E 精神！
+          </div>
+
+        </div>
+
+        <button onclick="restartGame()" class="paper-btn mt-8 bg-emerald-400 hover:bg-emerald-500 text-emerald-950 text-lg md:text-xl font-black px-8 py-3.5 rounded-2xl cursor-pointer">
+          🔄 重新挑戰，做得更好！
+        </button>
+      </div>
+
+    </section>
+
+    <!-- ==================== 底部版權 & 互動說明 ==================== -->
+    <footer id="gameFooter" class="mt-6 pt-4 border-t border-dashed border-amber-800/10 flex flex-wrap justify-between items-center text-[11px] md:text-xs text-amber-800/70 font-semibold">
+      <span>👨‍🏫 指導單位：環境永續發展協會．國小高年級社會科教具開發</span>
+      <span class="flex items-center gap-1">
+        <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> 遊戲中使用的決策與 3R3E 原則相符
+      </span>
+    </footer>
+
+  </main>
+
+  <!-- ==================== 彈出式視窗：3R3E 教育說明 ==================== -->
+  <div id="3r3eModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="paper-card max-w-lg w-full bg-white p-6 relative">
+      <button onclick="closeModal('3r3eModal')" class="absolute top-4 right-4 text-amber-950 hover:text-rose-600">
+        <i data-lucide="x" class="w-6 h-6"></i>
+      </button>
+      <div class="flex items-center gap-2 mb-4">
+        <span class="text-2xl">🌱</span>
+        <h4 class="text-xl font-black text-emerald-800">什麼是「3R3E 原則」？</h4>
+      </div>
+      <div class="space-y-4 text-sm md:text-base text-amber-950 font-semibold leading-relaxed">
+        <p class="border-b pb-2">這是綠色消費與環境保護最核心的永續原則：</p>
+        <div>
+          <h5 class="font-extrabold text-emerald-700">📌 3R 原則（物質循環）：</h5>
+          <ul class="list-disc list-inside space-y-1 pl-2 text-xs md:text-sm text-amber-900">
+            <li><strong class="text-emerald-800">Reduce (源頭減量)：</strong> 不主動提供塑膠袋，直接減少垃圾量。</li>
+            <li><strong class="text-emerald-800">Reuse (重複利用)：</strong> 鼓勵帶便當盒與環保杯來重複盛裝。</li>
+            <li><strong class="text-emerald-800">Recycle (回收再生)：</strong> 便當盒使用可再生的紙漿，讓垃圾能再利用。</li>
+          </ul>
+        </div>
+        <div>
+          <h5 class="font-extrabold text-emerald-700">📌 3E 原則（全面價值）：</h5>
+          <ul class="list-disc list-inside space-y-1 pl-2 text-xs md:text-sm text-amber-900">
+            <li><strong class="text-emerald-800">Economic (經濟合理)：</strong> 店家能獲得支撐生活的基本利潤。</li>
+            <li><strong class="text-emerald-800">Ecological (生態環保)：</strong> 行動有益於生態（保護水土與減碳）。</li>
+            <li><strong class="text-emerald-800">Equitable (社會公平)：</strong> 採購支持在地小農生計，對大自然和人都公平。</li>
+          </ul>
+        </div>
+      </div>
+      <button onclick="closeModal('3r3eModal')" class="paper-btn mt-6 w-full bg-emerald-300 hover:bg-emerald-400 text-emerald-950 font-black py-2.5 rounded-xl">
+        我學會了！
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== 遊戲邏輯與交互運算 JavaScript ==================== -->
+  <script>
+    // --- 遊戲全局狀態 ---
+    let state = {
+      money: 1000,
+      earth: 100,
+      phase: 'intro', // intro, procure, values, sales, ending
+      procureChoice: null, // 'A', 'B', 'C'
+      selectedValues: [], // 最多 3 個
+      currentCustomerIndex: 0,
+      isMuted: false,
+      logs: [],
+      salesDone: false,
+      tempEarned: 0
+    };
+
+    // --- 內建 Web Audio API 合成聲音 ---
+    let audioCtx = null;
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function playSound(type) {
+      if (state.isMuted) return;
+      try {
+        initAudio();
+        if (!audioCtx) return;
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        const now = audioCtx.currentTime;
+        
+        if (type === 'click') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(550, now);
+          osc.frequency.exponentialRampToValueAtTime(150, now + 0.1);
+          gainNode.gain.setValueAtTime(0.12, now);
+          gainNode.gain.linearRampToValueAtTime(0.01, now + 0.1);
+          osc.start(now);
+          osc.stop(now + 0.1);
+        } else if (type === 'coin') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, now); // C5
+          osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+          osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+          gainNode.gain.setValueAtTime(0.15, now);
+          gainNode.gain.linearRampToValueAtTime(0.01, now + 0.35);
+          osc.start(now);
+          osc.stop(now + 0.35);
+        } else if (type === 'success') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.25);
+          gainNode.gain.setValueAtTime(0.15, now);
+          gainNode.gain.linearRampToValueAtTime(0.01, now + 0.3);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        } else if (type === 'fail') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(280, now);
+          osc.frequency.linearRampToValueAtTime(140, now + 0.35);
+          gainNode.gain.setValueAtTime(0.12, now);
+          gainNode.gain.linearRampToValueAtTime(0.01, now + 0.4);
+          osc.start(now);
+          osc.stop(now + 0.4);
+        } else if (type === 'eco') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, now);
+          osc.frequency.setValueAtTime(1174.66, now + 0.1);
+          gainNode.gain.setValueAtTime(0.12, now);
+          gainNode.gain.linearRampToValueAtTime(0.01, now + 0.45);
+          osc.start(now);
+          osc.stop(now + 0.45);
+        }
+      } catch (e) {
+        console.warn("無法啟用聲音元件：", e);
+      }
+    }
+
+    function toggleMute() {
+      state.isMuted = !state.isMuted;
+      const icon = document.getElementById('muteBtn').querySelector('i');
+      if (state.isMuted) {
+        icon.setAttribute('data-lucide', 'volume-x');
+        document.getElementById('muteBtn').classList.add('bg-rose-100');
+      } else {
+        icon.setAttribute('data-lucide', 'volume-2');
+        document.getElementById('muteBtn').classList.remove('bg-rose-100');
+      }
+      lucide.createIcons();
+      playSound('click');
+    }
+
+    // --- 輔助彈出視窗模組 ---
+    function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
+      playSound('eco');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+      playSound('click');
+    }
+
+    // --- 資源狀態更新 (HUD) ---
+    function updateHUD() {
+      // 數值不低於 0，健康值不高於 100
+      state.money = Math.max(0, state.money);
+      state.earth = Math.max(0, Math.min(100, state.earth));
+
+      document.getElementById('hudMoney').textContent = state.money;
+      document.getElementById('hudEarth').textContent = state.earth;
+
+      // 更新地球圖示
+      renderEarthSvgs();
+      renderMoneyIcon();
+    }
+
+    // --- 動態渲染紙剪設計 SVG 形象 ---
+    function renderEarthSvgs() {
+      // 根據目前地球健康狀態回饋不同的地球表情
+      let faceSvg = '';
+      let colorEarth = '#a3e635'; // 預設亮綠
+      let colorSea = '#38bdf8'; // 預設亮藍
+
+      if (state.earth >= 75) {
+        // 開心地球
+        faceSvg = `
+          <!-- 閃亮大眼睛 -->
+          <circle cx="38" cy="45" r="4.5" fill="#4a2e1b" />
+          <circle cx="34" cy="42" r="1.5" fill="#fff" />
+          <circle cx="62" cy="45" r="4.5" fill="#4a2e1b" />
+          <circle cx="58" cy="42" r="1.5" fill="#fff" />
+          <!-- 笑容 -->
+          <path d="M 42 55 Q 50 63 58 55" stroke="#4a2e1b" stroke-width="3" stroke-linecap="round" fill="none" />
+          <!-- 開心紅暈 -->
+          <circle cx="28" cy="52" r="4" fill="#f87171" opacity="0.6" />
+          <circle cx="72" cy="52" r="4" fill="#f87171" opacity="0.6" />
+        `;
+      } else if (state.earth >= 40) {
+        // 普通無奈地球
+        faceSvg = `
+          <circle cx="38" cy="45" r="4" fill="#4a2e1b" />
+          <circle cx="62" cy="45" r="4" fill="#4a2e1b" />
+          <line x1="44" y1="56" x2="56" y2="56" stroke="#4a2e1b" stroke-width="3" stroke-linecap="round" />
+        `;
+      } else {
+        // 哭泣生病地球
+        colorEarth = '#e2e8f0'; // 慘白綠
+        colorSea = '#94a3b8'; // 灰暗藍
+        faceSvg = `
+          <!-- 難過眼睛 -->
+          <path d="M 32 46 Q 38 40 42 46" stroke="#4a2e1b" stroke-width="3" stroke-linecap="round" fill="none" />
+          <path d="M 58 46 Q 62 40 68 46" stroke="#4a2e1b" stroke-width="3" stroke-linecap="round" fill="none" />
+          <!-- 哭泣嘴巴 -->
+          <path d="M 44 60 Q 50 52 56 60" stroke="#4a2e1b" stroke-width="3" stroke-linecap="round" fill="none" />
+          <!-- 藍色眼淚 -->
+          <path d="M 38 48 C 38 54 36 56 36 58 C 34 56 34 54 34 48 Z" fill="#60a5fa" />
+          <path d="M 62 48 C 62 54 64 56 64 58 C 66 56 66 54 66 48 Z" fill="#60a5fa" />
+        `;
+      }
+
+      const earthHTML = `
+        <svg viewBox="0 0 100 100" class="w-32 h-32 md:w-40 md:h-40 drop-shadow-[4px_6px_0px_#4a2e1b]">
+          <circle cx="50" cy="50" r="45" fill="${colorSea}" stroke="#4a2e1b" stroke-width="3.5" />
+          <!-- 拼貼感陸地 -->
+          <path d="M 22 35 Q 35 20 48 30 T 60 48 T 42 75 T 18 55 Z" fill="${colorEarth}" stroke="#4a2e1b" stroke-width="2" />
+          <path d="M 62 58 Q 78 45 88 58 T 80 82 T 60 70 Z" fill="${colorEarth}" stroke="#4a2e1b" stroke-width="2" />
+          <path d="M 50 12 Q 62 6 72 15 T 58 24 Z" fill="${colorEarth}" stroke="#4a2e1b" stroke-width="2" />
+          ${faceSvg}
+        </svg>
+      `;
+
+      // 同步更新首頁地球與HUD地球
+      const introE = document.getElementById('introEarthSvg');
+      if (introE) introE.innerHTML = earthHTML;
+
+      // HUD精簡小地球
+      const hudE = document.getElementById('earthIcon');
+      if (hudE) {
+        hudE.innerHTML = `
+          <svg viewBox="0 0 100 100" class="w-8 h-8">
+            <circle cx="50" cy="50" r="45" fill="${colorSea}" stroke="#4a2e1b" stroke-width="5" />
+            <path d="M 25 35 Q 40 25 50 40 T 30 75 Z" fill="${colorEarth}" stroke="#4a2e1b" stroke-width="3" />
+            <circle cx="35" cy="45" r="5" fill="#4a2e1b" />
+            <circle cx="65" cy="45" r="5" fill="#4a2e1b" />
+            <path d="M 40 60 Q 50 68 60 60" stroke="#4a2e1b" stroke-width="5" stroke-linecap="round" fill="none" />
+          </svg>
+        `;
+      }
+    }
+
+    function renderMoneyIcon() {
+      const icon = document.getElementById('moneyIcon');
+      if (icon) {
+        icon.innerHTML = `
+          <svg viewBox="0 0 100 100" class="w-8 h-8">
+            <circle cx="50" cy="50" r="45" fill="#fef08a" stroke="#4a2e1b" stroke-width="5" />
+            <rect x="40" y="25" width="20" height="50" rx="10" fill="#facc15" stroke="#4a2e1b" stroke-width="4" />
+            <line x1="50" y1="20" x2="50" y2="80" stroke="#4a2e1b" stroke-width="4" stroke-linecap="round" />
+            <text x="50" y="58" font-family="Fredoka" font-size="28" font-weight="900" text-anchor="middle" fill="#4a2e1b">$</text>
+          </svg>
+        `;
+      }
+    }
+
+    // --- 頁面跳轉與初始化控制器 ---
+    function startGame() {
+      playSound('success');
+      state.phase = 'procure';
+      
+      document.getElementById('screenIntro').classList.add('hidden');
+      document.getElementById('gameHeader').classList.remove('hidden');
+      document.getElementById('screenProcure').classList.remove('hidden');
+      
+      updatePhaseLabel("1. 進貨採購");
+      updateHUD();
+    }
+
+    function updatePhaseLabel(text) {
+      document.getElementById('currentPhaseLabel').innerHTML = `進行中：${text}`;
+    }
+
+    // --- 第一階段：食材進貨採購 ---
+    function selectProcure(choice) {
+      playSound('coin');
+      state.procureChoice = choice;
+      let cost = 0;
+      let earthImpact = 0;
+      let logMsg = "";
+
+      if (choice === 'A') {
+        cost = 200;
+        earthImpact = -30;
+        logMsg = "📦 新老闆購買了「方案 A：進口便宜全餐」(-200 元)。大堆一次性包裝與食物里程對地球健康造成衝擊！";
+      } else if (choice === 'B') {
+        cost = 500;
+        earthImpact = -10;
+        logMsg = "📦 新老闆購買了「方案 B：超市紙盒套餐」(-500 元)。適中的成本，紙製品的使用表現良好。";
+      } else if (choice === 'C') {
+        cost = 800;
+        earthImpact = 20;
+        logMsg = "📦 新老闆購買了「方案 C：在地有機裸賣」(-800 元)。環保 3R3E 原則！小農經濟獲得支持，地球非常開心！";
+      }
+
+      state.money -= cost;
+      state.earth += earthImpact;
+      addLog(logMsg);
+      updateHUD();
+
+      // 切換至第二階段
+      state.phase = 'values';
+      document.getElementById('screenProcure').classList.add('hidden');
+      document.getElementById('screenValues').classList.remove('hidden');
+      updatePhaseLabel("2. 主打特色標籤");
+    }
+
+    // --- 第二階段：鑽石菜單主打特色挑選 ---
+    function toggleValue(val) {
+      playSound('click');
+      const idx = state.selectedValues.indexOf(val);
+      const btn = document.getElementById(`val-${val}`);
+
+      if (idx > -1) {
+        // 取消選取
+        state.selectedValues.splice(idx, 1);
+        btn.classList.remove('bg-amber-300', 'scale-[1.05]', 'border-emerald-700');
+        btn.classList.add('bg-white');
+      } else {
+        // 檢查上限
+        if (state.selectedValues.length >= 3) {
+          // 聲音提醒，無法多選
+          playSound('fail');
+          return;
+        }
+        state.selectedValues.push(val);
+        btn.classList.remove('bg-white');
+        btn.classList.add('bg-amber-300', 'scale-[1.05]', 'border-emerald-700');
+      }
+
+      // 更新進度與按鈕狀態
+      const countLabel = document.getElementById('selectedCount');
+      countLabel.textContent = state.selectedValues.length;
+
+      const confirmBtn = document.getElementById('confirmValuesBtn');
+      if (state.selectedValues.length === 3) {
+        confirmBtn.disabled = false;
+        confirmBtn.className = "paper-btn bg-emerald-400 hover:bg-emerald-500 text-emerald-950 font-black text-lg px-10 py-3 rounded-2xl cursor-pointer animate-wiggle";
+      } else {
+        confirmBtn.disabled = true;
+        confirmBtn.className = "paper-btn bg-slate-200 text-slate-400 font-black text-lg px-10 py-3 rounded-2xl cursor-not-allowed";
+      }
+    }
+
+    function confirmValues() {
+      playSound('success');
+      addLog(`🏷️ 店鋪決定本日主打價值觀：[${state.selectedValues.join(', ')}]`);
+      
+      // 切換至第三階段
+      state.phase = 'sales';
+      document.getElementById('screenValues').classList.add('hidden');
+      document.getElementById('screenSales').classList.remove('hidden');
+      updatePhaseLabel("3. 營業與突發挑戰");
+      
+      // 初始化顧客排隊
+      state.currentCustomerIndex = 0;
+      updateQueueVisual();
+      renderCustomer();
+    }
+
+    // --- 第三階段：營業販售流程設計 ---
+    const customersData = [
+      {
+        name: "學生小明",
+        role: "肚子餓的一般學生",
+        avatarColor: "bg-sky-100",
+        avatarSvg: `
+          <svg viewBox="0 0 100 100" class="w-24 h-24">
+            <!-- 學生帽 -->
+            <path d="M 25 35 L 75 35 L 50 15 Z" fill="#1e3a8a" stroke="#4a2e1b" stroke-width="3" />
+            <!-- 臉 -->
+            <circle cx="50" cy="55" r="25" fill="#fbcfe8" stroke="#4a2e1b" stroke-width="3" />
+            <!-- 眼鏡與眼睛 -->
+            <circle cx="42" cy="52" r="5" fill="none" stroke="#4a2e1b" stroke-width="2.5" />
+            <circle cx="58" cy="52" r="5" fill="none" stroke="#4a2e1b" stroke-width="2.5" />
+            <line x1="47" y1="52" x2="53" y2="52" stroke="#4a2e1b" stroke-width="2.5" />
+            <circle cx="42" cy="52" r="1.5" fill="#4a2e1b" />
+            <circle cx="58" cy="52" r="1.5" fill="#4a2e1b" />
+            <!-- 嘴巴 -->
+            <path d="M 45 68 Q 50 72 55 68" stroke="#4a2e1b" stroke-width="3" stroke-linecap="round" fill="none" />
+          </svg>
+        `,
+        introText: "「老闆好！下課肚子超餓！聽說你們家的便當很厲害，我要買一份招牌特色餐點！」",
+        eventTitle: "❓ 小明的塑膠袋考驗",
+        eventQuestion: "小明：「老闆，今天雨好大，我可以多拿 3 個免費塑膠袋來防雨和分裝醬料嗎？」",
+        optionYText: "給袋子 (多賺 50 元，但多製造塑膠垃圾)",
+        optionNText: "不給 (不賺額外費，但保住地球，並引導環保理念)",
+        resultYText: "小明多付了袋子費用 50 元。他高興地撐傘離開，但無形中多消耗了塑膠材料，地球累積負擔加重！",
+        resultNText: "你親切地拒絕，並跟小明說明店鋪的塑膠減量理念。小明恍然大悟：「原來如此，我用衣服遮著就好了！謝謝老闆教我！」",
+        impactY: { money: 50, earth: -15 },
+        impactN: { money: 0, earth: 10 }
+      },
+      {
+        name: "上班族阿美",
+        role: "注重品質的綠色消費者",
+        avatarColor: "bg-emerald-100",
+        avatarSvg: `
+          <svg viewBox="0 0 100 100" class="w-24 h-24">
+            <!-- 俏麗長髮與頭巾 -->
+            <path d="M 22 25 Q 50 10 78 25 T 70 80 T 30 80 Z" fill="#7c2d12" stroke="#4a2e1b" stroke-width="3" />
+            <!-- 臉 -->
+            <circle cx="50" cy="50" r="23" fill="#fef3c7" stroke="#4a2e1b" stroke-width="3" />
+            <!-- 溫柔大眼 -->
+            <circle cx="42" cy="46" r="3" fill="#4a2e1b" />
+            <circle cx="58" cy="46" r="3" fill="#4a2e1b" />
+            <!-- 微笑 -->
+            <path d="M 44 60 Q 50 66 56 60" stroke="#4a2e1b" stroke-width="2.5" stroke-linecap="round" fill="none" />
+          </svg>
+        `,
+        introText: "「老闆您好！聽說你們很有經營想法！我想買一份便當，你們的主打特色符合我的理念嗎？」",
+        eventTitle: "❓ 阿美的剩食惜食問題",
+        eventQuestion: "經營過程中店裡多準備了幾份即將過期的美味副餐。你會如何處理這些剩食呢？",
+        optionYText: "直接丟入垃圾桶 (省時省事，但製造廚餘廢棄物)",
+        optionNText: "惜食App六折促銷 (花時間上架但支持源頭不浪費，並多賺 80 元)",
+        resultYText: "雖然當下店面乾淨整潔。但是多餘的優質食材被當成廚餘，白白耗費了生產能量，地球發出嘆息！",
+        resultNText: "雖然花費幾分鐘使用惜食網頁，但促銷活動吸引了新客人搶購，減少食物浪費同時增加了 80 元營收！",
+        impactY: { money: 0, earth: -15 },
+        impactN: { money: 80, earth: 15 }
+      },
+      {
+        name: "林媽媽與全家人",
+        role: "勤儉持家的社區媽媽",
+        avatarColor: "bg-amber-100",
+        avatarSvg: `
+          <svg viewBox="0 0 100 100" class="w-24 h-24">
+            <!-- 溫柔捲髮 -->
+            <path d="M 20 40 C 20 15, 80 15, 80 40 C 80 50, 75 75, 25 75 Z" fill="#b45309" stroke="#4a2e1b" stroke-width="3" />
+            <!-- 臉 -->
+            <circle cx="50" cy="48" r="23" fill="#ffedd5" stroke="#4a2e1b" stroke-width="3" />
+            <!-- 戴眼鏡的智慧眼睛 -->
+            <circle cx="41" cy="45" r="4.5" fill="none" stroke="#047857" stroke-width="2.5" />
+            <circle cx="59" cy="45" r="4.5" fill="none" stroke="#047857" stroke-width="2.5" />
+            <circle cx="41" cy="45" r="1.5" fill="#4a2e1b" />
+            <circle cx="59" cy="45" r="1.5" fill="#4a2e1b" />
+            <path d="M 46 45 L 54 45" stroke="#4a2e1b" stroke-width="2" />
+            <!-- 開心笑臉 -->
+            <path d="M 43 58 C 45 64, 55 64, 57 58" stroke="#4a2e1b" stroke-width="3" stroke-linecap="round" fill="none" />
+          </svg>
+        `,
+        introText: "「老闆！我們全家人今天不煮飯。我們自己帶了環保保鮮盒和不鏽鋼餐具來裝，幫大家響應減塑喔！」",
+        eventTitle: "❓ 林媽媽的自備優惠考驗",
+        eventQuestion: "林媽媽詢問：「既然我們自己帶了餐盒，店家有沒有自備容器折價優惠來鼓勵大家呢？」",
+        optionYText: "提供全家優惠 (每個便當折抵 20 元鼓勵減塑，共折 60 元)",
+        optionNText: "不提供折價 (堅持利潤，小本經營不退讓)",
+        resultYText: "林媽媽非常認可你的推廣！開心地保證下次一定帶全社區媽媽來，雖然收入少了 60 元，但省下 3 組垃圾消耗！",
+        resultNText: "你選擇維持既定價格。林媽媽覺得店家有些冷漠：「這樣主動做環保的人會有一點失望呢...」",
+        impactY: { money: -60, earth: 20 },
+        impactN: { money: 0, earth: -10 }
+      }
+    ];
+
+    function updateQueueVisual() {
+      for (let i = 0; i < 3; i++) {
+        const item = document.getElementById(`queueItem${i}`);
+        if (i < state.currentCustomerIndex) {
+          // 已服務，半透明打勾
+          item.classList.add('opacity-30');
+          item.classList.remove('opacity-100');
+          item.querySelector('.w-12').classList.add('bg-slate-300');
+          item.querySelector('.w-12').textContent = "✓";
+        } else if (i === state.currentCustomerIndex) {
+          // 當前正在服務
+          item.classList.add('opacity-100', 'scale-[1.1]', 'font-black');
+          item.classList.remove('opacity-40');
+        } else {
+          // 排隊中
+          item.classList.add('opacity-40');
+          item.classList.remove('opacity-100', 'scale-[1.1]');
+        }
+      }
+    }
+
+    // 動態渲染右半部顧客卡片
+    function renderCustomer() {
+      updateQueueVisual();
+      const cust = customersData[state.currentCustomerIndex];
+      const box = document.getElementById('customerServiceBox');
+
+      // 基本販售營收利潤算法
+      let baseProfit = 0;
+      let packageText = "";
+      if (state.procureChoice === 'A') {
+        baseProfit = 200;
+        packageText = "方案 A：進口便宜便當";
+      } else if (state.procureChoice === 'B') {
+        baseProfit = 300;
+        packageText = "方案 B：標準紙盒便當";
+      } else if (state.procureChoice === 'C') {
+        baseProfit = 450; // 環保溢價，綠色支持者願意付出更多支持有機
+        packageText = "方案 C：小農無塑裸賣餐";
+      }
+
+      // 檢查價值觀匹配
+      let matchBonus = 0;
+      let matchLog = "";
+      
+      const hasGreenTags = state.selectedValues.includes('環保') || state.selectedValues.includes('健康') || state.selectedValues.includes('營養');
+      const hasTrendyTags = state.selectedValues.includes('美觀') || state.selectedValues.includes('新奇') || state.selectedValues.includes('價格便宜');
+
+      if (state.currentCustomerIndex === 1) { // 綠色上班族阿美
+        if (hasGreenTags && state.procureChoice === 'C') {
+          matchBonus = 120;
+          matchLog = "✨ 阿美發現你的便當不僅美味，更實踐了「健康環保營養」的主打特色，她非常感動，額外加點支持你！獲得溢價獎勵 +120 元！";
+        } else if (hasTrendyTags && state.procureChoice === 'A') {
+          matchBonus = 50;
+          matchLog = "✨ 阿美覺得主打「美觀與新奇」的風格很合大眾口味，但對過度包裝稍感遺憾。基本支持購買。";
+        } else {
+          matchBonus = 20;
+        }
+      } else {
+        matchBonus = 30; // 基礎
+      }
+
+      state.tempEarned = baseProfit + matchBonus;
+
+      box.innerHTML = `
+        <div class="flex-grow flex flex-col justify-between">
+          
+          <!-- 上方：顧客基本對話與形象 -->
+          <div>
+            <div class="flex items-center gap-4 mb-4">
+              <!-- 紙偶人頭像 -->
+              <div class="p-2 rounded-2xl ${cust.avatarColor} border-2 border-amber-950 shadow-sm paper-tag">
+                ${cust.avatarSvg}
+              </div>
+              <div>
+                <span class="bg-amber-950 text-white text-[10px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">${cust.role}</span>
+                <h4 class="text-xl font-black text-amber-950 mt-1">${cust.name}</h4>
+              </div>
+            </div>
+
+            <!-- 對話氣泡紙風格 -->
+            <div class="relative bg-amber-50 p-4 rounded-2xl border-2 border-amber-950 mb-4 shadow-inner">
+              <p class="text-sm md:text-base text-amber-900 font-bold leading-relaxed">${cust.introText}</p>
+              <!-- 氣泡小尾巴 -->
+              <div class="absolute top-4 left-[-10px] w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-amber-950 border-b-8 border-b-transparent"></div>
+              <div class="absolute top-4 left-[-7px] w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-amber-50 border-b-8 border-b-transparent"></div>
+            </div>
+          </div>
+
+          <!-- 下方：操作動作「開始販售」 -->
+          <div class="pt-4 border-t border-dashed border-amber-900/10">
+            <div class="text-xs text-amber-800 font-semibold mb-2 flex justify-between">
+              <span>提供便當：${packageText}</span>
+              <span>預估營收：<strong class="text-emerald-700">${state.tempEarned} 元</strong> (含特色加成)</span>
+            </div>
+            
+            <button onclick="triggerEventPhase(${baseProfit}, ${matchBonus}, '${matchLog}')" class="paper-btn w-full bg-emerald-400 hover:bg-emerald-500 text-emerald-950 font-black text-base md:text-lg py-3 rounded-2xl flex items-center justify-center gap-2">
+              🍱 製作便當並交給顧客
+            </button>
+          </div>
+
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
+    // 點擊製作便當後，跳出突發事件
+    function triggerEventPhase(baseProfit, matchBonus, matchLog) {
+      playSound('coin');
+      
+      // 先加入基礎金錢
+      state.money += state.tempEarned;
+      updateHUD();
+      
+      addLog(`🍱 完成服務 ${customersData[state.currentCustomerIndex].name}，便當賣出：+${state.tempEarned} 元！`);
+      if (matchLog !== "") {
+        addLog(matchLog);
+      }
+
+      const cust = customersData[state.currentCustomerIndex];
+      const box = document.getElementById('customerServiceBox');
+
+      // 渲染突發事件挑戰
+      box.innerHTML = `
+        <div class="flex-grow flex flex-col justify-between">
+          <div>
+            <div class="flex items-center gap-2 mb-3">
+              <span class="bg-rose-100 text-rose-800 border-2 border-rose-950 px-2 py-0.5 rounded-full text-xs font-black paper-tag">
+                ⚠️ 突發事件考驗
+              </span>
+              <h4 class="text-lg font-black text-amber-950">${cust.eventTitle}</h4>
+            </div>
+            
+            <p class="text-sm md:text-base text-amber-900/90 leading-relaxed font-bold mb-4 bg-rose-50/50 p-4 rounded-xl border border-rose-950/20">
+              ${cust.eventQuestion}
+            </p>
+          </div>
+
+          <!-- 事件兩個二選一選項 -->
+          <div class="space-y-3">
+            <button onclick="resolveEvent('Y')" class="paper-btn w-full text-left bg-amber-50 hover:bg-amber-100 p-3 rounded-xl flex items-start gap-2 border-amber-950">
+              <span class="bg-amber-950 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-black shrink-0">A</span>
+              <span class="text-xs md:text-sm font-extrabold text-amber-950">${cust.optionYText}</span>
+            </button>
+            <button onclick="resolveEvent('N')" class="paper-btn w-full text-left bg-emerald-50 hover:bg-emerald-100 p-3 rounded-xl flex items-start gap-2 border-emerald-950">
+              <span class="bg-emerald-950 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-black shrink-0">B</span>
+              <span class="text-xs md:text-sm font-extrabold text-emerald-950">${cust.optionNText}</span>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // 處理事件結果
+    function resolveEvent(choice) {
+      const cust = customersData[state.currentCustomerIndex];
+      const box = document.getElementById('customerServiceBox');
+      
+      let impact, resultText, soundType;
+      if (choice === 'Y') {
+        impact = cust.impactY;
+        resultText = cust.resultYText;
+        soundType = 'coin';
+      } else {
+        impact = cust.impactN;
+        resultText = cust.resultNText;
+        soundType = 'eco';
+      }
+
+      playSound(soundType);
+
+      // 套用影響
+      state.money += impact.money;
+      state.earth += impact.earth;
+      updateHUD();
+
+      // 日誌紀錄
+      const moneyText = impact.money >= 0 ? `+${impact.money}` : `${impact.money}`;
+      const earthText = impact.earth >= 0 ? `+${impact.earth}` : `${impact.earth}`;
+      addLog(`📝 事件抉擇回饋：資金 ${moneyText} 元，地球健康 ${earthText} 分。`);
+
+      // 渲染決策結果面板
+      box.innerHTML = `
+        <div class="flex-grow flex flex-col justify-between">
+          <div>
+            <div class="flex items-center gap-2 mb-3">
+              <span class="bg-emerald-100 text-emerald-800 border-2 border-emerald-950 px-2 py-0.5 rounded-full text-xs font-black paper-tag">
+                🎯 決策影響與學習
+              </span>
+              <h4 class="text-lg font-black text-amber-950">店長決策回顧</h4>
+            </div>
+
+            <div class="bg-amber-50/50 p-4 rounded-xl border border-amber-950/20 mb-4">
+              <p class="text-xs md:text-sm text-amber-900 font-semibold leading-relaxed">
+                ${resultText}
+              </p>
+            </div>
+
+            <!-- 收支與影響量表 -->
+            <div class="grid grid-cols-2 gap-3 text-center">
+              <div class="bg-white p-2 rounded-lg border border-amber-950/20">
+                <span class="text-[10px] font-bold block text-amber-700">資金增減</span>
+                <span class="text-sm font-black ${impact.money >= 0 ? 'text-emerald-700' : 'text-rose-600'}">
+                  ${impact.money >= 0 ? '＋' : '－'} ${Math.abs(impact.money)} 元
+                </span>
+              </div>
+              <div class="bg-white p-2 rounded-lg border border-amber-950/20">
+                <span class="text-[10px] font-bold block text-emerald-800">地球健康值影響</span>
+                <span class="text-sm font-black ${impact.earth >= 0 ? 'text-emerald-700' : 'text-rose-600'}">
+                  ${impact.earth >= 0 ? '＋' : '－'} ${Math.abs(impact.earth)} 分
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 下一步 -->
+          <div class="pt-4 border-t border-dashed border-amber-900/10">
+            <button onclick="nextStep()" class="paper-btn w-full bg-amber-300 hover:bg-amber-400 text-amber-950 font-black text-base py-2.5 rounded-xl">
+              ${state.currentCustomerIndex < 2 ? '服務下一位排隊顧客 ➔' : '進行今日結算 ➔'}
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function nextStep() {
+      playSound('click');
+      if (state.currentCustomerIndex < 2) {
+        state.currentCustomerIndex++;
+        renderCustomer();
+      } else {
+        // 完成今日所有顧客，進入結算
+        triggerSettlement();
+      }
+    }
+
+    // --- 第四階段：結算、店租扣減與反思結局 ---
+    function triggerSettlement() {
+      playSound('success');
+      state.phase = 'ending';
+
+      // 扣除固定店租與薪水雜支 700 元
+      const rent = 700;
+      state.money -= rent;
+      addLog(`💸 營業日結束，自動扣除固定「店租與薪資雜支」： -700 元`);
+      updateHUD();
+
+      document.getElementById('screenSales').classList.add('hidden');
+      document.getElementById('screenEnding').classList.remove('hidden');
+      updatePhaseLabel("4. 營業結算與證書");
+
+      // 動態寫入數值
+      document.getElementById('endMoney').textContent = state.money;
+      document.getElementById('endEarth').textContent = state.earth;
+
+      const endTitle = document.getElementById('endTitle');
+      const endDesc = document.getElementById('endDescription');
+      const badge = document.getElementById('endingBadge');
+
+      // 判定結局邏輯與教育回饋
+      if (state.money < 150) {
+        // 結局二：破產但極度環保
+        endTitle.textContent = "破產但超級環保的綠色天使 👼";
+        endTitle.className = "text-amber-700 font-black";
+        endDesc.textContent = `你非常保護地球，地球健康值高達 ${state.earth} 分！但是營運結束扣除店租與人事薪水後，你手上的剩餘資金只剩下 ${state.money} 元，便當店面臨倒閉了！綠色老闆需要維持「環境保護」與「合理的金錢利潤」平衡，才能建立真正永續的事業。下次試著增加收入或挑選更高效率的食材組合吧！`;
+        badge.innerHTML = "環境守護<br>天使獎";
+        badge.className = "absolute top-4 right-4 md:top-8 md:right-8 transform rotate-12 bg-transparent text-amber-700 border-4 border-dashed border-amber-700 rounded-full w-24 h-24 flex items-center justify-center font-black text-center text-xs md:text-sm select-none";
+      } else if (state.earth < 65) {
+        // 結局一：賺大錢但破壞地球
+        endTitle.textContent = "賺大錢但被包裝怪獸圍繞的店長 😈";
+        endTitle.className = "text-rose-700 font-black";
+        endDesc.textContent = `你賺了很多錢，最終資金高達 ${state.money} 元！但是為了省成本和貪圖方便，你製造了大量塑膠袋和過度包裝餐盒。地球健康值只剩下慘澹的 ${state.earth} 分，地球生病了！大自然正在哭泣！小朋友，真正的成功與滿足感不一定來自賺取最多的金錢，守護家園的健康更珍貴！`;
+        badge.innerHTML = "便利怪獸<br>警示章";
+        badge.className = "absolute top-4 right-4 md:top-8 md:right-8 transform rotate-12 bg-transparent text-rose-600 border-4 border-dashed border-rose-600 rounded-full w-24 h-24 flex items-center justify-center font-black text-center text-xs md:text-sm select-none";
+      } else {
+        // 結局三：永續綠色店長
+        endTitle.textContent = "最棒的永續經營小綠色大師 🏆";
+        endTitle.className = "text-emerald-700 font-black animate-bounce";
+        endDesc.textContent = `太不可思議了！你達成了幾乎不可能的任務！在扣除所有店租支出後，你賺到了理想而健康的營運資金（${state.money}元），同時將地球健康值維持在極佳的 ${state.earth} 分！你完美實踐了 3R3E 原則，兼顧了社會公平與環境生態。你是最優秀的綠色小老闆！`;
+        badge.innerHTML = "永續經營<br>大師認證";
+        badge.className = "absolute top-4 right-4 md:top-8 md:right-8 transform rotate-12 bg-transparent text-emerald-600 border-4 border-dashed border-emerald-600 rounded-full w-24 h-24 flex items-center justify-center font-black text-center text-xs md:text-sm select-none";
+      }
+    }
+
+    // --- 日誌系統 ---
+    function addLog(message) {
+      state.logs.push(message);
+      const logBox = document.getElementById('salesLog');
+      if (logBox) {
+        logBox.innerHTML = state.logs.map(log => `<p class="border-b border-amber-900/5 pb-1">🌿 ${log}</p>`).join('');
+        // 自動滑動到最底下
+        logBox.scrollTop = logBox.scrollHeight;
+      }
+    }
+
+    // --- 重新開始 ---
+    function restartGame() {
+      playSound('success');
+      state = {
+        money: 1000,
+        earth: 100,
+        phase: 'intro',
+        procureChoice: null,
+        selectedValues: [],
+        currentCustomerIndex: 0,
+        isMuted: state.isMuted,
+        logs: [],
+        salesDone: false,
+        tempEarned: 0
+      };
+
+      // 清除主打特色按鈕狀態
+      const buttons = document.querySelectorAll('#screenValues button');
+      buttons.forEach(btn => {
+        if(btn.id !== 'confirmValuesBtn') {
+          btn.className = "paper-btn bg-white hover:bg-amber-100 text-amber-950 font-extrabold px-5 py-3 rounded-2xl text-base cursor-pointer";
+        }
+      });
+      const countLabel = document.getElementById('selectedCount');
+      if (countLabel) countLabel.textContent = "0";
+
+      // 隱藏所有頁面，顯示首頁
+      document.getElementById('screenEnding').classList.add('hidden');
+      document.getElementById('gameHeader').classList.add('hidden');
+      document.getElementById('screenIntro').classList.remove('hidden');
+      
+      // 重置日誌
+      document.getElementById('salesLog').innerHTML = "<p>🌱 店鋪正式拉開鐵門，開始營業！</p>";
+
+      updateHUD();
+    }
+
+    // --- 頁面初始加載 ---
+    window.onload = function() {
+      // 渲染動態圖案
+      renderEarthSvgs();
+      renderMoneyIcon();
+      lucide.createIcons();
+    };
+  </script>
+</body>
+</html>
